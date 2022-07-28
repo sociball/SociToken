@@ -6,7 +6,7 @@ import "./BEP20.sol";
 import "./IPancakeSwapRouter.sol";
 import "./SafeMathInt.sol";
 
-contract VICToken is BEP20Detailed, BEP20 {
+contract SociToken is BEP20Detailed, BEP20 {
   using SafeMath for uint256;
   using SafeMathInt for int256;
   mapping(address => bool) public liquidityPool;
@@ -17,13 +17,8 @@ contract VICToken is BEP20Detailed, BEP20 {
   uint8 public transferTax;
   uint256 private taxAmount;
   address public marketingPool;
-  address public Treasury;
-  address public VicGemPool;
   address public Pool2;
-  uint8 public mktTaxPercent;
-  uint8 public TreasuryTaxPercent;
-  uint8 public VicGemPoolTaxPercent;
-  uint8 private Pool2TaxPercent;
+  uint8 public mktPercent;
 
   //swap 
   IPancakeSwapRouter public uniswapV2Router;
@@ -33,44 +28,33 @@ contract VICToken is BEP20Detailed, BEP20 {
   bool public enableTax;
 
   event changeTax(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax);
-  event changeTaxPercent(uint8 _mktTaxPercent,uint8 _TreasuryTaxPercent,uint8 _VicGemPoolTaxPercent,uint8 _Pool2TaxPercent);
+  event changesetMarketingPercent(uint8 _mktTaxPercent);
   event changeLiquidityPoolStatus(address lpAddress, bool status);
   event changeMarketingPool(address marketingPool);
   event changePool2(address Pool2);
-  event changeTreasury(address Treasury);
-  event changeVicGemPool(address VicGemPool);
   event changeWhitelistTax(address _address, bool status);  
   event UpdateUniswapV2Router(address indexed newAddress,address indexed oldAddress);
   
  
-  constructor() payable BEP20Detailed("VicStep999", "VIC999", 18) {
-    uint256 totalTokens = 50000000 * 10**uint256(decimals());
+  constructor() payable BEP20Detailed("SociBall", "SOCI", 18) {
+    uint256 totalTokens = 10000000 * 10**uint256(decimals());
     _mint(msg.sender, totalTokens);
-    sellTax = 3;
-    buyTax = 3;
+    sellTax = 9;
+    buyTax = 9;
     transferTax = 0;
     enableTax = false;
-    marketingPool = 0xf062268048A726ba01E0D7B368BB5FD013eED7bf;
-    Treasury = 0xbCAcBf064a989DDA384fEC060D22B0852828d9C8;
-    VicGemPool = 0xd5fc1b54DC5F54355588FdA49f696acb891c0375;
-    Pool2 = 0xfBAce007a4e4681E906aBe1dd3b1a0A645f5C797;
-    mktTaxPercent = 4;
-    TreasuryTaxPercent = 0;
-    VicGemPoolTaxPercent = 16;
-    Pool2TaxPercent = 80;
+    marketingPool = 0x0B7df63b1DBa8cf4934a2FFA215dfd099F14f9C8;
+    Pool2 = 0xa5419c766379d203Ce8e733c35BCcC8D76108429;
+    mktPercent = 20;
 
     whitelistTax[address(this)] = true;
     whitelistTax[marketingPool] = true;
     whitelistTax[Pool2] = true;
-    whitelistTax[Treasury] = true;
-    whitelistTax[VicGemPool] = true;
     whitelistTax[owner()] = true;
     whitelistTax[address(0)] = true;
-    
-
+  
     uniswapV2Router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);//pancakeroter v2
     _approve(address(this), address(uniswapV2Router), ~uint256(0));
-
     swapTokensAtAmount = totalTokens*2/10**6; 
     swapTokensMaxAmount = totalTokens*2/10**4; 
   }
@@ -82,7 +66,6 @@ contract VICToken is BEP20Detailed, BEP20 {
     liquidityPool[_lpAddress] = _status;
     emit changeLiquidityPoolStatus(_lpAddress, _status);
   }
-
   function setMarketingPool(address _marketingPool) external onlyOwner {
     marketingPool = _marketingPool;
     whitelistTax[marketingPool] = true;
@@ -93,17 +76,6 @@ contract VICToken is BEP20Detailed, BEP20 {
     whitelistTax[Pool2] = true;
     emit changePool2(_Pool2);
   }  
-  function setTreasury(address _Treasury) external onlyOwner {
-    Treasury = _Treasury;
-    whitelistTax[Treasury] = true;
-    emit changeTreasury(_Treasury);
-  }  
-  function setVicGemPool(address _VicGemPool) external onlyOwner {
-    VicGemPool = _VicGemPool;
-    whitelistTax[VicGemPool] = true;
-    emit changeVicGemPool(_VicGemPool);
-  } 
-
   function setTaxes(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) external onlyOwner {
     require(_sellTax < 9);
     require(_buyTax < 9);
@@ -114,13 +86,10 @@ contract VICToken is BEP20Detailed, BEP20 {
     transferTax = _transferTax;
     emit changeTax(_enableTax,_sellTax,_buyTax,_transferTax);
   }
-  function setTaxPercent(uint8 _mktTaxPercent, uint8 _TreasuryTaxPercent, uint8 _VicGemPoolTaxPercent, uint8 _Pool2TaxPercent) external onlyOwner {
-    require(_mktTaxPercent +  _TreasuryTaxPercent + _VicGemPoolTaxPercent + _Pool2TaxPercent == 100);
-    mktTaxPercent = _mktTaxPercent;
-    TreasuryTaxPercent = _TreasuryTaxPercent;
-    VicGemPoolTaxPercent = _VicGemPoolTaxPercent;
-    Pool2TaxPercent = _Pool2TaxPercent;
-    emit changeTaxPercent(_mktTaxPercent,_TreasuryTaxPercent,_VicGemPoolTaxPercent,_Pool2TaxPercent);
+  function setMarketingPercent(uint8 _mktPercent) external onlyOwner {
+    require(_mktPercent <= 100);
+    mktPercent = _mktPercent;
+    emit changesetMarketingPercent(_mktPercent);
   }
 
   function setWhitelist(address _address, bool _status) external onlyOwner {
@@ -130,6 +99,7 @@ contract VICToken is BEP20Detailed, BEP20 {
   function getTaxes() external view returns (uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) {
     return (sellTax, buyTax, transferTax);
   } 
+
   //update swap
   function updateUniswapV2Router(address newAddress) public onlyOwner {
     require(
@@ -140,32 +110,11 @@ contract VICToken is BEP20Detailed, BEP20 {
     _approve(address(this), address(uniswapV2Router), ~uint256(0));
     emit UpdateUniswapV2Router(newAddress, address(uniswapV2Router));
   }
-  function setSwapTokensAtAmount(uint256 amount) external onlyOwner {
-    swapTokensAtAmount = amount;
+  function setSwapTokensAtAmount(uint256 _swapTokensAtAmount, uint256 _swapTokensMaxAmount) external onlyOwner {
+    swapTokensAtAmount = _swapTokensAtAmount;
+    swapTokensMaxAmount = _swapTokensMaxAmount;
   }
-  function setSwapTokensMaxAmount(uint256 amount) external onlyOwner {
-    swapTokensMaxAmount = amount;
-  }
-  function sentT2marketingPool() external onlyOwner {
-    uint256 contractTokenBalance = balanceOf(address(this));
-    if(contractTokenBalance>0){
-      super._transfer(address(this), marketingPool, contractTokenBalance);
-    }
-  }
-  function sentT2Pool2token(address tokenaddress) external onlyOwner {
-    uint256 newBalance = IBEP20(tokenaddress).balanceOf(address(this));
-    if(newBalance>0){
-      IBEP20(tokenaddress).transfer(Pool2, newBalance);
-    }
-  }
-  function sentT2Pool2BNB() external onlyOwner {
-    uint256 newBalance = address(this).balance;
-    if(newBalance>0){
-      payable(Pool2).transfer(newBalance);
-    }
-  }
-
-
+  
   //Tranfer and tax
   function _transfer(address sender, address receiver, uint256 amount) internal virtual override {
     if (amount == 0) {
@@ -197,18 +146,10 @@ contract VICToken is BEP20Detailed, BEP20 {
       }
       
       if(taxAmount > 0) {
-        uint256 mktTax = taxAmount.div(100).mul(mktTaxPercent);
-        uint256 TreasuryTax = taxAmount.div(100).mul(TreasuryTaxPercent);
-        uint256 VicGemPoolTax = taxAmount.div(100).mul(VicGemPoolTaxPercent);
-        uint256 Pool2Tax = taxAmount - mktTax - TreasuryTax - VicGemPoolTax;
+        uint256 mktTax = taxAmount.mul(mktPercent).div(100);
+        uint256 Pool2Tax = taxAmount - mktTax;
         if(mktTax>0){
           super._transfer(sender, marketingPool, mktTax);
-        }
-        if(TreasuryTax>0){
-          super._transfer(sender, Treasury, TreasuryTax);
-        }
-        if(VicGemPoolTax>0){
-          super._transfer(sender, VicGemPool, VicGemPoolTax);
         }
         if(Pool2Tax>0){
           super._transfer(sender, address(this) , Pool2Tax);
@@ -245,18 +186,5 @@ contract VICToken is BEP20Detailed, BEP20 {
       {} catch {}
   }
 
-  //common
-  function burn(uint256 amount) external {
-    _burn(msg.sender, amount);
-  }
-
-  function AirDrop(address[] memory dests, uint256 amount) external onlyOwner {
-    require(amount * dests.length <= balanceOf(msg.sender) , string("Transfer amount exceeds balance"));
-    uint256 i = 0;
-    while (i < dests.length) {
-        transfer(dests[i] , amount);
-        i++;
-    }
-  } 
   receive() external payable {}
 }
