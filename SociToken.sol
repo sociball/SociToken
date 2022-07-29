@@ -77,9 +77,9 @@ contract SociToken is BEP20Detailed, BEP20 {
     emit changeTeamWallet(_TeamWallet);
   }  
   function setTaxes(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) external onlyOwner {
-    require(_sellTax < 9);
-    require(_buyTax < 9);
-    require(_transferTax < 9);
+    require(_sellTax < 20);
+    require(_buyTax < 20);
+    require(_transferTax < 20);
     enableTax = _enableTax;
     sellTax = _sellTax;
     buyTax = _buyTax;
