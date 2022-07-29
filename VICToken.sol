@@ -16,8 +16,8 @@ contract SociToken is BEP20Detailed, BEP20 {
   uint8 public sellTax; 
   uint8 public transferTax;
   uint256 private taxAmount;
-  address public marketingPool;
-  address public Pool2;
+  address public marketingWallet;
+  address public TeamWallet;
   uint8 public mktPercent;
 
   //swap 
@@ -29,9 +29,9 @@ contract SociToken is BEP20Detailed, BEP20 {
 
   event changeTax(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax);
   event changesetMarketingPercent(uint8 _mktTaxPercent);
-  event changeLiquidityPoolStatus(address lpAddress, bool status);
-  event changeMarketingPool(address marketingPool);
-  event changePool2(address Pool2);
+  event changeLiquidityTax(address lpAddress, bool taxenable);
+  event changeMarketingWallet(address marketingWallet);
+  event changeTeamWallet(address TeamWallet);
   event changeWhitelistTax(address _address, bool status);  
   event UpdateUniswapV2Router(address indexed newAddress,address indexed oldAddress);
   
@@ -43,13 +43,13 @@ contract SociToken is BEP20Detailed, BEP20 {
     buyTax = 9;
     transferTax = 0;
     enableTax = false;
-    marketingPool = 0x0B7df63b1DBa8cf4934a2FFA215dfd099F14f9C8;
-    Pool2 = 0xa5419c766379d203Ce8e733c35BCcC8D76108429;
-    mktPercent = 20;
+    marketingWallet = 0x0B7df63b1DBa8cf4934a2FFA215dfd099F14f9C8;
+    TeamWallet = 0xa5419c766379d203Ce8e733c35BCcC8D76108429;
+    mktPercent = 90;
 
     whitelistTax[address(this)] = true;
-    whitelistTax[marketingPool] = true;
-    whitelistTax[Pool2] = true;
+    whitelistTax[marketingWallet] = true;
+    whitelistTax[TeamWallet] = true;
     whitelistTax[owner()] = true;
     whitelistTax[address(0)] = true;
   
@@ -62,19 +62,19 @@ contract SociToken is BEP20Detailed, BEP20 {
   
 
   //update fee
-  function setLiquidityPoolStatus(address _lpAddress, bool _status) external onlyOwner {
-    liquidityPool[_lpAddress] = _status;
-    emit changeLiquidityPoolStatus(_lpAddress, _status);
+  function setLiquidityTax(address _lpAddress, bool _taxenable) external onlyOwner {
+    liquidityPool[_lpAddress] = _taxenable;
+    emit changeLiquidityTax(_lpAddress, _taxenable);
   }
-  function setMarketingPool(address _marketingPool) external onlyOwner {
-    marketingPool = _marketingPool;
-    whitelistTax[marketingPool] = true;
-    emit changeMarketingPool(_marketingPool);
+  function setMarketingWallet(address _marketingWallet) external onlyOwner {
+    marketingWallet = _marketingWallet;
+    whitelistTax[marketingWallet] = true;
+    emit changeMarketingWallet(_marketingWallet);
   }  
-  function setPool2(address _Pool2) external onlyOwner {
-    Pool2 = _Pool2;
-    whitelistTax[Pool2] = true;
-    emit changePool2(_Pool2);
+  function setTeamWallet(address _TeamWallet) external onlyOwner {
+    TeamWallet = _TeamWallet;
+    whitelistTax[TeamWallet] = true;
+    emit changeTeamWallet(_TeamWallet);
   }  
   function setTaxes(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) external onlyOwner {
     require(_sellTax < 9);
@@ -147,12 +147,12 @@ contract SociToken is BEP20Detailed, BEP20 {
       
       if(taxAmount > 0) {
         uint256 mktTax = taxAmount.mul(mktPercent).div(100);
-        uint256 Pool2Tax = taxAmount - mktTax;
+        uint256 TeamWalletTax = taxAmount - mktTax;
         if(mktTax>0){
-          super._transfer(sender, marketingPool, mktTax);
+          super._transfer(sender, marketingWallet, mktTax);
         }
-        if(Pool2Tax>0){
-          super._transfer(sender, address(this) , Pool2Tax);
+        if(TeamWalletTax>0){
+          super._transfer(sender, address(this) , TeamWalletTax);
         }
       }    
       super._transfer(sender, receiver, amount - taxAmount);
@@ -165,7 +165,7 @@ contract SociToken is BEP20Detailed, BEP20 {
     swapTokensForEth(tokens);
     uint256 newBalance = address(this).balance;
     if(newBalance>0){
-      payable(Pool2).transfer(newBalance);
+      payable(TeamWallet).transfer(newBalance);
     }
   }
 
