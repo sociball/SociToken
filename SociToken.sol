@@ -29,7 +29,7 @@ contract SociToken is BEP20Detailed, BEP20 {
 
   event changeTax(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax);
   event changesetMarketingPercent(uint8 _mktTaxPercent);
-  event changeLiquidityTax(address lpAddress, bool taxenable);
+  event changePairForTax(address lpAddress, bool taxenable);
   event changeMarketingWallet(address marketingWallet);
   event changeTeamWallet(address TeamWallet);
   event changeWhitelistTax(address _address, bool status);  
@@ -53,7 +53,7 @@ contract SociToken is BEP20Detailed, BEP20 {
     whitelistTax[owner()] = true;
     whitelistTax[address(0)] = true;
   
-    uniswapV2Router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);//pancakeroter v2
+    uniswapV2Router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     _approve(address(this), address(uniswapV2Router), ~uint256(0));
     swapTokensAtAmount = totalTokens*2/10**6; 
     swapTokensMaxAmount = totalTokens*2/10**4; 
@@ -62,9 +62,9 @@ contract SociToken is BEP20Detailed, BEP20 {
   
 
   //update fee
-  function setLiquidityTax(address _lpAddress, bool _taxenable) external onlyOwner {
+  function enablePairForTax(address _lpAddress, bool _taxenable) external onlyOwner {
     liquidityPool[_lpAddress] = _taxenable;
-    emit changeLiquidityTax(_lpAddress, _taxenable);
+    emit changePairForTax(_lpAddress, _taxenable);
   }
   function setMarketingWallet(address _marketingWallet) external onlyOwner {
     marketingWallet = _marketingWallet;
@@ -77,9 +77,9 @@ contract SociToken is BEP20Detailed, BEP20 {
     emit changeTeamWallet(_TeamWallet);
   }  
   function setTaxes(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) external onlyOwner {
-    require(_sellTax < 20);
-    require(_buyTax < 20);
-    require(_transferTax < 20);
+    require(_sellTax < 20,"Need: sellTax < 20");
+    require(_buyTax < 20,"Need: buyTax < 20");
+    require(_transferTax < 20,"Need: transferTax < 20");
     enableTax = _enableTax;
     sellTax = _sellTax;
     buyTax = _buyTax;
@@ -87,7 +87,7 @@ contract SociToken is BEP20Detailed, BEP20 {
     emit changeTax(_enableTax,_sellTax,_buyTax,_transferTax);
   }
   function setMarketingPercent(uint8 _mktPercent) external onlyOwner {
-    require(_mktPercent <= 100);
+    require(_mktPercent <= 100,"Need: mktPercent <= 100");
     mktPercent = _mktPercent;
     emit changesetMarketingPercent(_mktPercent);
   }
