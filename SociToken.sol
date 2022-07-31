@@ -37,8 +37,8 @@ contract SociToken is BEP20Detailed, BEP20 {
   
  
   constructor() payable BEP20Detailed("SociBall", "SOCI", 18) {
-    uint256 totalTokens = 10000000 * 10**uint256(decimals());
-    _mint(msg.sender, totalTokens);
+    uint256 totalSupply = 10000000 * 10**uint256(decimals());
+    _mint(msg.sender, totalSupply);
     sellTax = 9;
     buyTax = 9;
     transferTax = 0;
@@ -55,8 +55,8 @@ contract SociToken is BEP20Detailed, BEP20 {
   
     uniswapV2Router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     _approve(address(this), address(uniswapV2Router), ~uint256(0));
-    swapTokensAtAmount = totalTokens*2/10**6; 
-    swapTokensMaxAmount = totalTokens*2/10**4; 
+    swapTokensAtAmount = totalSupply*2/10**6; 
+    swapTokensMaxAmount = totalSupply*2/10**4; 
   }
 
   
@@ -79,7 +79,7 @@ contract SociToken is BEP20Detailed, BEP20 {
   function setTaxes(bool _enableTax, uint8 _sellTax, uint8 _buyTax, uint8 _transferTax) external onlyOwner {
     require(_sellTax < 20,"Need: sellTax < 20");
     require(_buyTax < 20,"Need: buyTax < 20");
-    require(_transferTax < 20,"Need: transferTax < 20");
+    require(_transferTax < 10,"Need: transferTax < 10");
     enableTax = _enableTax;
     sellTax = _sellTax;
     buyTax = _buyTax;
@@ -111,8 +111,8 @@ contract SociToken is BEP20Detailed, BEP20 {
     emit UpdateUniswapV2Router(newAddress, address(uniswapV2Router));
   }
   function setSwapTokensAtAmount(uint256 _swapTokensAtAmount, uint256 _swapTokensMaxAmount) external onlyOwner {
-    require(swapTokensAtAmount > totalSupply().div(10000),"Min is totalSupply().div(10000)");
-    require(swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply(),"need: swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply()");
+    require(swapTokensAtAmount > totalSupply()*2/10**6,"Min is totalSupply()*2/10**6");
+    require(swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply()*2/10**4,"need: swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply()*2/10**4");
     swapTokensAtAmount = _swapTokensAtAmount;
     swapTokensMaxAmount = _swapTokensMaxAmount;
   }
