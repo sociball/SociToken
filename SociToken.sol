@@ -111,8 +111,8 @@ contract SociToken is BEP20Detailed, BEP20 {
     emit UpdateUniswapV2Router(newAddress, address(uniswapV2Router));
   }
   function setSwapTokensAtAmount(uint256 _swapTokensAtAmount, uint256 _swapTokensMaxAmount) external onlyOwner {
-    require(swapTokensAtAmount>0 && swapTokensAtAmount < totalSupply());
-    require(swapTokensMaxAmount>swapTokensAtAmount && swapTokensMaxAmount < totalSupply());
+    require(swapTokensAtAmount > totalSupply().div(10000),"Min is totalSupply().div(10000)");
+    require(swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply(),"need: swapTokensMaxAmount > swapTokensAtAmount && swapTokensMaxAmount < totalSupply()");
     swapTokensAtAmount = _swapTokensAtAmount;
     swapTokensMaxAmount = _swapTokensMaxAmount;
   }
